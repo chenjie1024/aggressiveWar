@@ -1,0 +1,54 @@
+-- 攻伐战争 数据库初始化脚本
+CREATE DATABASE IF NOT EXISTS gongfa_war DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE gongfa_war;
+
+CREATE TABLE IF NOT EXISTS players (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  device_id VARCHAR(64) NOT NULL UNIQUE,
+  display_name VARCHAR(32),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS saves (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  player_id BIGINT NOT NULL,
+  slot INT NOT NULL,
+  name VARCHAR(64),
+  seed INT NOT NULL,
+  map_size INT NOT NULL,
+  difficulty INT NOT NULL,
+  opponents INT NOT NULL,
+  elapsed_seconds INT NOT NULL DEFAULT 0,
+  state_json LONGTEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_player_slot (player_id, slot),
+  KEY idx_player (player_id),
+  CONSTRAINT fk_saves_player FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS battles (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  player_id BIGINT NOT NULL,
+  result ENUM('win','loss','draw') NOT NULL,
+  winner INT NOT NULL DEFAULT -1,
+  map_size INT NOT NULL,
+  difficulty INT NOT NULL,
+  opponents INT NOT NULL,
+  duration_seconds INT NOT NULL DEFAULT 0,
+  cities_captured INT NOT NULL DEFAULT 0,
+  units_killed INT NOT NULL DEFAULT 0,
+  score INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_player (player_id),
+  KEY idx_created (created_at),
+  CONSTRAINT fk_battles_player FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS settings (
+  player_id BIGINT PRIMARY KEY,
+  json TEXT NOT NULL,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_settings_player FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

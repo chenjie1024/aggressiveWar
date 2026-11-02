@@ -1,0 +1,21 @@
+node_modules/
+dist/
+.env
+*.log
+.DS_Store
+*.local
+
+# Android 工具链与产物（本地下载 / 生成，不入库）
+.android-sdk/
+.gradle-dist/
+android/local.properties
+android/.gradle/
+android/build/
+android/app/build/
+android/app/src/main/assets/www/
+android/keystore/
+*.apk
+*.aab
+
+# 打包好的安装包（本地生成）
+release/

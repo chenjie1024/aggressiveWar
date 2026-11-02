@@ -1,0 +1,1511 @@
+:root {
+  --bg: #0a1420;
+  --ocean: #0e2c45;
+  --panel: #16202e;
+  --panel-2: #1d2a3a;
+  --edge-dark: #05090f;
+  --edge-light: #3d5570;
+  --text: #e8eef1;
+  --muted: #8fa3b8;
+  --gold: #ffd34d;
+  --blue: #5aa9e6;
+  --green: #8ce99a;
+  --red: #ff6b6b;
+  --dither: repeating-conic-gradient(rgba(255, 255, 255, 0.028) 0% 25%, transparent 0% 50%);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: ui-monospace, 'Cascadia Mono', 'Consolas', 'PingFang SC', 'Microsoft YaHei', monospace;
+  font-size: 13px;
+  letter-spacing: 0.4px;
+  color: var(--text);
+  background: var(--bg);
+  user-select: none;
+  -webkit-user-select: none;
+  image-rendering: pixelated;
+}
+
+#app {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+canvas#game {
+  position: absolute;
+  inset: 0;
+  display: block;
+  cursor: grab;
+  image-rendering: pixelated;
+  touch-action: none;
+}
+
+canvas#game.panning {
+  cursor: grabbing;
+}
+
+/* ===== 小地图 + 视图控制 ===== */
+#mapctl {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: flex-start;
+}
+
+#mapctl .maprow {
+  display: flex;
+  gap: 5px;
+}
+
+#minimap {
+  width: 156px;
+  height: 87px;
+  display: block;
+  background: #0a1c2e;
+  border: 3px solid var(--edge-dark);
+  box-shadow:
+    inset 0 0 0 1px var(--edge-light),
+    0 4px 0 rgba(0, 0, 0, 0.45);
+  image-rendering: pixelated;
+  cursor: pointer;
+  touch-action: none;
+}
+
+/* ===== 成就列表 ===== */
+.achv {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 4px 0;
+  border-bottom: 1px dashed rgba(143, 163, 184, 0.14);
+  opacity: 0.55;
+}
+
+.achv.on {
+  opacity: 1;
+}
+
+.achv-icon {
+  font-size: 15px;
+  line-height: 1.2;
+  flex: none;
+  width: 20px;
+  text-align: center;
+}
+
+.achv-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.achv-name {
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--gold);
+}
+
+.achv .muted {
+  font-size: 10.5px;
+  line-height: 1.35;
+}
+
+/* ===== 像素面板通用外观 ===== */
+.panelbox,
+#hud,
+#sidepanel,
+.card {
+  background-color: var(--panel);
+  background-image: var(--dither);
+  background-size: 4px 4px;
+  border: 3px solid var(--edge-dark);
+  box-shadow:
+    inset 0 0 0 1px var(--edge-light),
+    0 4px 0 rgba(0, 0, 0, 0.45);
+}
+
+/* ===== 顶栏 ===== */
+#hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 14px;
+  border-width: 0 0 3px 0;
+  box-shadow:
+    inset 0 -1px 0 var(--edge-light),
+    0 4px 0 rgba(0, 0, 0, 0.35);
+  z-index: 10;
+}
+
+#hud .res {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: bold;
+  font-size: 13px;
+  padding: 3px 8px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 2px solid var(--edge-dark);
+  box-shadow: inset 0 0 0 1px rgba(61, 85, 112, 0.6);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+#hud .res .dot {
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--edge-dark);
+  display: inline-block;
+}
+
+#hud .spacer {
+  flex: 1;
+}
+
+/* ===== 侧栏 ===== */
+#sidepanel {
+  position: absolute;
+  top: 70px;
+  right: 12px;
+  width: 262px;
+  max-height: calc(100vh - 92px);
+  overflow-y: auto;
+  padding: 12px;
+  z-index: 10;
+  font-size: 12px;
+  display: none;
+}
+
+#sidepanel.visible {
+  display: block;
+}
+
+#sidepanel h3 {
+  font-size: 14px;
+  margin-bottom: 8px;
+  padding-bottom: 5px;
+  border-bottom: 3px solid var(--edge-dark);
+  box-shadow: 0 1px 0 var(--edge-light);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
+}
+
+#sidepanel .row {
+  display: flex;
+  justify-content: space-between;
+  margin: 4px 0;
+}
+
+#sidepanel .row > span:first-child {
+  color: var(--muted);
+}
+
+#sidepanel .bar {
+  height: 9px;
+  background: #0a1119;
+  border: 2px solid var(--edge-dark);
+  overflow: hidden;
+  margin: 5px 0;
+}
+
+#sidepanel .bar > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(180deg, var(--green) 0%, #4f9e5c 100%);
+}
+
+/* ===== 按钮：厚重像素键 ===== */
+button {
+  font-family: inherit;
+  font-weight: bold;
+  font-size: 12px;
+  letter-spacing: 0.6px;
+  color: var(--text);
+  background: linear-gradient(180deg, #2a3d54 0%, #1c2a3a 100%);
+  border: 3px solid var(--edge-dark);
+  box-shadow:
+    inset 0 0 0 1px var(--edge-light),
+    0 4px 0 #05090f;
+  padding: 6px 11px;
+  cursor: pointer;
+  transition:
+    transform 0.05s steps(2, end),
+    filter 0.12s;
+}
+
+button:hover {
+  filter: brightness(1.22);
+}
+
+button:active {
+  transform: translateY(4px);
+  box-shadow: inset 0 0 0 1px var(--edge-light);
+}
+
+button:disabled {
+  filter: grayscale(0.7) brightness(0.7);
+  cursor: not-allowed;
+}
+
+button.primary {
+  background: linear-gradient(180deg, #4f9ad4 0%, #2f6f9f 100%);
+  color: #06121c;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+button.primary:hover {
+  filter: brightness(1.15);
+}
+
+button.danger {
+  background: linear-gradient(180deg, #d95c5c 0%, #9c3636 100%);
+  color: #fff;
+}
+
+button.small {
+  padding: 3px 7px;
+  font-size: 11px;
+}
+
+button.active {
+  background: linear-gradient(180deg, #ffd34d 0%, #c9a227 100%);
+  color: #1a1200;
+}
+
+/* ===== 覆盖层：菜单 / 弹窗（必须盖在 HUD / 抽屉 / 底部信息条之上） ===== */
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.28) 0 1px, transparent 1px 3px),
+    rgba(6, 12, 20, 0.78);
+  z-index: 60;
+  animation: fade-in 0.15s steps(3, end);
+}
+
+/* 弹窗打开时收起底部信息条，避免它压住弹窗的确认按钮 */
+body.dialog-open #sidepanel,
+body.dialog-open #sidepanel.visible {
+  transform: translateY(115%) !important;
+  pointer-events: none !important;
+}
+
+body.dialog-open #rotate-hint {
+  display: none !important;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.card {
+  padding: 22px 26px;
+  max-width: 520px;
+  width: 92%;
+  text-align: center;
+  animation: pop-in 0.16s steps(4, end);
+}
+
+@keyframes pop-in {
+  from {
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.card h1 {
+  font-size: 26px;
+  letter-spacing: 3px;
+  margin-bottom: 4px;
+  color: var(--gold);
+  text-shadow:
+    0 3px 0 #05090f,
+    0 0 18px rgba(255, 211, 77, 0.28);
+}
+
+.card .subtitle {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 9px 0;
+  text-align: left;
+}
+
+.field label {
+  font-weight: bold;
+  color: var(--muted);
+}
+
+.field select {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 5px 8px;
+  color: var(--text);
+  background: #0e1722;
+  border: 3px solid var(--edge-dark);
+  box-shadow: inset 0 0 0 1px var(--edge-light);
+}
+
+input[type='range'] {
+  accent-color: var(--gold);
+  height: 20px;
+}
+
+/* ===== Toast ===== */
+#toasts {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  z-index: 15;
+  pointer-events: none;
+}
+
+.toast {
+  background-color: var(--panel-2);
+  background-image: var(--dither);
+  background-size: 4px 4px;
+  border: 3px solid var(--edge-dark);
+  box-shadow:
+    inset 0 0 0 1px var(--edge-light),
+    3px 3px 0 rgba(0, 0, 0, 0.45);
+  padding: 7px 11px;
+  font-size: 12px;
+  max-width: 330px;
+  animation: toast-in 0.18s steps(4, end);
+}
+
+@keyframes toast-in {
+  from {
+    transform: translateX(-14px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* ===== 排行榜 ===== */
+#leaderboard {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+  font-size: 12px;
+}
+
+#leaderboard th,
+#leaderboard td {
+  border: 2px solid var(--edge-dark);
+  padding: 4px 8px;
+}
+
+#leaderboard th {
+  background: #22303f;
+  color: var(--gold);
+}
+
+/* ===== 左栏：势力详情 + 战斗记录 ===== */
+#leftpanel {
+  position: absolute;
+  top: 70px;
+  left: 12px;
+  width: 296px;
+  max-height: calc(100vh - 232px);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* 中间可滚动区：三块面板都在这里，页面级只滚动这一层（不再层层嵌套） */
+#leftpanel .drawer-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  pointer-events: auto;
+  padding-right: 2px;
+}
+
+#leftpanel .panelbox {
+  padding: 10px 12px;
+  pointer-events: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+}
+
+/* 面板折叠（点标题） */
+#leftpanel .panelbox > h3 {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#leftpanel .panelbox > h3 .fold {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+#leftpanel .panelbox.folded > div {
+  display: none;
+}
+
+#leftpanel .panelbox.folded {
+  padding-bottom: 8px;
+}
+
+/* 面板内部列表：给足高度（手机上主要靠"折叠"而不是层层滚动来腾地方） */
+#leftpanel .pb-forces {
+  flex: 0 0 auto;
+}
+
+#leftpanel .pb-log,
+#leftpanel .pb-achv {
+  flex: 0 0 auto;
+}
+
+#leftpanel .pb-forces > div {
+  max-height: 168px;
+  overflow-y: auto;
+}
+
+#leftpanel .pb-log > div {
+  /* 用视口相关上限，保证"显示全部/只看最近"这个页脚永远露在外面 */
+  max-height: min(152px, 22vh);
+  overflow-y: auto;
+}
+
+#leftpanel .pb-achv > div {
+  max-height: 232px;
+  overflow-y: auto;
+}
+
+#leftpanel h3 {
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--gold);
+  border-bottom: 3px solid var(--edge-dark);
+  box-shadow: 0 1px 0 var(--edge-light);
+  padding-bottom: 5px;
+  margin-bottom: 8px;
+}
+
+.force-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 11.5px;
+  margin: 4px 0;
+  padding-bottom: 5px;
+  border-bottom: 1px dashed rgba(143, 163, 184, 0.14);
+}
+
+.force-row .dot,
+.nb .dot {
+  width: 11px;
+  height: 11px;
+  border: 2px solid var(--edge-dark);
+  flex: none;
+  display: inline-block;
+}
+
+/* 第一行：势力名；第二行：数据芯片（窄栏里自动换行，不会挤成一团） */
+.force-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.force-name {
+  font-weight: bold;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.force-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.force-stats > span {
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--muted);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(61, 85, 112, 0.6);
+  padding: 0 5px;
+  white-space: nowrap;
+}
+
+.force-stats > span.good {
+  color: var(--green);
+  border-color: rgba(140, 233, 154, 0.4);
+}
+
+/* 建造特殊设施：按钮 + 效果说明同一行 */
+.build-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.build-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.build-row button {
+  flex: none;
+  min-width: 84px;
+}
+
+.build-row > span {
+  font-size: 10.5px;
+  line-height: 1.35;
+}
+
+.force-row.dead {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+#log-list {
+  flex: 1;
+  overflow-y: auto;
+  font-size: 11px;
+  line-height: 1.6;
+  min-height: 60px;
+}
+
+.log-entry {
+  padding: 2px 0;
+  border-bottom: 1px dashed rgba(143, 163, 184, 0.16);
+}
+
+.log-capture {
+  color: var(--green);
+  font-weight: bold;
+}
+
+.log-battle {
+  color: #e0ac69;
+}
+
+.log-eliminate {
+  color: var(--red);
+  font-weight: bold;
+}
+
+.log-turn {
+  color: var(--blue);
+  margin-top: 4px;
+}
+
+.log-event {
+  color: var(--gold);
+}
+
+#nb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.nb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+}
+
+.nb span:nth-child(2) {
+  flex: 1;
+}
+
+.nb b {
+  color: var(--gold);
+}
+
+/* ===== 滚动条 ===== */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a1119;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2a3d54;
+  border: 2px solid var(--edge-dark);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3d5570;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ===== 端形态开关：桌面 / 手机 ===== */
+.mob-only {
+  display: none !important;
+}
+
+#drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 9, 16, 0.55);
+  z-index: 35;
+}
+
+.drawer-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  margin: -10px -10px 8px;
+  background: var(--panel-2);
+  border-bottom: 3px solid var(--edge-dark);
+}
+
+.drawer-head b {
+  color: var(--gold);
+  letter-spacing: 2px;
+}
+
+.drawer-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+/* 底部信息面板的把手 / 关闭按钮 */
+.sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: -2px 0 8px;
+}
+
+.sheet-head .grab {
+  flex: 1;
+  height: 6px;
+  background: repeating-linear-gradient(90deg, var(--edge-light) 0 10px, transparent 10px 18px);
+  opacity: 0.7;
+}
+
+.sheet-head button {
+  flex: none;
+}
+
+/* 竖屏提示：非阻塞的小提示条（不挡操作） */
+#rotate-hint {
+  display: none;
+  position: absolute;
+  left: 50%;
+  top: 60px;
+  transform: translateX(-50%);
+  z-index: 25;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  background-color: var(--panel-2);
+  background-image: var(--dither);
+  background-size: 4px 4px;
+  border: 3px solid var(--edge-dark);
+  box-shadow: inset 0 0 0 1px var(--edge-light);
+  max-width: 92vw;
+}
+
+/* Android 外壳：状态栏已隐藏，但横屏刘海可能压住左右两侧按钮，留出安全边距 */
+.shell-android #hud {
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+
+.shell-android #toasts {
+  padding-left: max(6px, env(safe-area-inset-left));
+}
+
+/* ===== 触屏设备：放大可点区域（不依赖视口尺寸） ===== */
+@media (pointer: coarse) {
+  button {
+    min-height: 44px;
+    padding: 8px 14px;
+    font-size: 14px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  button.small {
+    min-height: 38px;
+    font-size: 13px;
+  }
+
+  input[type='range'] {
+    height: 36px;
+  }
+
+  input[type='checkbox'] {
+    width: 22px;
+    height: 22px;
+  }
+
+  .field select {
+    min-height: 44px;
+    font-size: 14px;
+    padding: 8px 10px;
+  }
+
+  #sidepanel .row,
+  #sidepanel .nb,
+  #leftpanel .force-row {
+    font-size: 13px;
+    margin: 6px 0;
+  }
+}
+
+/* ===== 窄屏 / 矮屏（手机横竖屏）：改成抽屉 + 底部面板 ===== */
+@media (max-width: 900px), (max-height: 520px) {
+  .mob-only {
+    display: flex !important;
+  }
+
+  .desk-only {
+    display: none !important;
+  }
+
+  /* 顶栏：只留 行动/回合 芯片 + ☰ + 🔊 + 结束回合 */
+  #hud {
+    height: 52px;
+    gap: 6px;
+    padding: 0 max(6px, env(safe-area-inset-right)) 0 max(6px, env(safe-area-inset-left));
+  }
+
+  #hud .res {
+    font-size: 12px;
+    padding: 4px 6px;
+    gap: 4px;
+  }
+
+  #hud button {
+    min-height: 38px;
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  #hud #btn-drawer {
+    min-width: 44px;
+    padding: 6px 8px;
+    font-size: 17px;
+  }
+
+  /* 左栏 → 抽屉 */
+  #leftpanel {
+    top: 52px;
+    left: 0;
+    bottom: 0;
+    width: min(84vw, 330px);
+    max-height: none;
+    padding: 10px;
+    gap: 8px;
+    overflow: hidden;
+    background-color: rgba(12, 20, 30, 0.97);
+    background-image: var(--dither);
+    background-size: 4px 4px;
+    border-right: 3px solid var(--edge-dark);
+    box-shadow: 4px 0 0 rgba(0, 0, 0, 0.4);
+    transform: translateX(-104%);
+    transition: transform 0.16s steps(4, end);
+    z-index: 40;
+    pointer-events: auto;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+
+  #leftpanel.open {
+    transform: none;
+  }
+
+  #leftpanel .panelbox:last-child {
+    max-height: 38vh;
+  }
+
+  #leftpanel h3 {
+    font-size: 13px;
+  }
+
+  /* 抽屉底部四个按钮：2×2 网格（.mob-only 的 display:flex 会覆盖 grid，这里提高优先级） */
+  #leftpanel .drawer-actions,
+  #leftpanel .drawer-actions.mob-only {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding-top: 6px;
+  }
+
+  #leftpanel .drawer-actions button {
+    width: 100%;
+    white-space: nowrap;
+    font-size: 13px;
+    padding: 8px 6px;
+  }
+
+  /* 右栏 → 右侧详情面板：宽度不超过屏幕 30%，高度占满顶栏以下 */
+  #sidepanel {
+    top: 52px;
+    left: auto;
+    right: 0;
+    bottom: 0;
+    width: min(30vw, 320px);
+    max-height: none;
+    display: block;
+    padding: 8px 10px calc(10px + env(safe-area-inset-bottom));
+    border-width: 0 0 0 3px;
+    box-shadow: -4px 0 0 rgba(0, 0, 0, 0.4);
+    overflow-y: auto;
+    transform: translateX(108%);
+    transition: transform 0.16s steps(4, end);
+    pointer-events: none;
+    z-index: 30;
+  }
+
+  #sidepanel.visible {
+    transform: none;
+    pointer-events: auto;
+  }
+
+  #sidepanel h3 {
+    font-size: 14px;
+    margin-bottom: 4px;
+    padding-bottom: 3px;
+  }
+
+  /* 侧栏高度充足：直接显示完整明细，不再用"摘要 + 展开"两段式 */
+  .sheet-summary {
+    display: none !important;
+  }
+
+  #sidepanel .sheet-body {
+    display: block;
+  }
+
+  /* 弹窗：占满宽度、可滚动、按钮大一些 */
+  .card {
+    width: 96%;
+    max-width: 560px !important;
+    max-height: 94vh;
+    overflow-y: auto;
+    padding: 14px 16px;
+  }
+
+  .card h1 {
+    font-size: 20px;
+  }
+
+  /* 矮屏（手机横屏）设置项排两列，保证「开始游戏」不用滚动就能点到 */
+  .card .field {
+    margin: 5px 0;
+  }
+
+  .card .field label {
+    font-size: 12px;
+  }
+
+  #toasts {
+    left: 8px;
+    right: 8px;
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    align-items: flex-start;
+  }
+
+  /* 手机上小地图缩小、贴左下角；toast 上移避开它 */
+  #mapctl {
+    left: 8px;
+    bottom: calc(8px + env(safe-area-inset-bottom));
+  }
+
+  #minimap {
+    width: 118px;
+    height: 66px;
+  }
+
+  #toasts {
+    bottom: calc(84px + env(safe-area-inset-bottom));
+  }
+
+  .toast {
+    max-width: 100%;
+    font-size: 12px;
+  }
+}
+
+/* 细屏竖屏（手机竖着拿）：给个不挡操作的小提示 */
+@media (max-width: 560px) and (orientation: portrait) {
+  #rotate-hint {
+    display: flex;
+  }
+}
+
+/* 矮屏（手机横屏）：设置项两列排布 + 收紧间距，保证「开始游戏」不用滚动就能点到 */
+@media (max-height: 520px) {
+  .card {
+    max-width: 780px !important;
+  }
+
+  #menu-overlay .card {
+    padding: 10px 12px;
+    max-height: 96vh;
+    /* 用 flex-wrap 做两列，避免 inline-block 的空格导致每行只能放一个 */
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+  }
+
+  #menu-overlay .card > h1,
+  #menu-overlay .card > .subtitle,
+  #menu-overlay .card > #btn-start,
+  #menu-overlay .card > .muted {
+    flex: 0 0 100%;
+  }
+
+  #menu-overlay .field {
+    flex: 0 0 49%;
+    width: auto;
+    margin: 2px 0;
+    display: flex;
+    vertical-align: top;
+  }
+
+  #menu-overlay .field label {
+    font-size: 11.5px;
+  }
+
+  #menu-overlay .muted {
+    font-size: 10.5px;
+  }
+
+  #menu-overlay input[type='range'] {
+    height: 26px;
+  }
+
+  #menu-overlay h1 {
+    font-size: 20px;
+    margin-bottom: 2px;
+  }
+
+  #menu-overlay .subtitle {
+    margin-bottom: 6px;
+  }
+
+  #menu-overlay #btn-start {
+    margin-top: 6px;
+    padding: 8px;
+    min-height: 44px;
+  }
+
+  /* 排行榜需要联网，横屏手机上先让位给「开始游戏」 */
+  #menu-overlay h3,
+  #menu-overlay #leaderboard-box {
+    display: none;
+  }
+}
+
+/* 触屏尺寸规则放最后：确保覆盖上面的紧凑布局（同一元素上 mobile 布局不应压过触屏最小点击区） */
+@media (pointer: coarse) {
+  #hud button,
+  #hud #btn-drawer {
+    min-height: 44px;
+  }
+
+  .drawer-actions button,
+  #sidepanel button,
+  .overlay button {
+    min-height: 44px;
+  }
+}
+
+
+
+/* 联机状态横幅：显示房间码与「轮到谁」 */
+#net-banner {
+  position: fixed;
+  top: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: rgba(10, 16, 24, 0.86);
+  border: 1px solid #33404f;
+  color: #c8d6e4;
+  font-size: 12px;
+  font-weight: 700;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+#net-banner.mine {
+  background: rgba(255, 211, 77, 0.16);
+  border-color: #ffd34d;
+  color: #ffe9a3;
+}
+
+@media (max-width: 900px), (max-height: 520px) {
+  #net-banner {
+    top: 50px;
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+}
+
+/* ===== 手机端界面优化（2026-09）=====
+   1) 菜单：一列到底，"标签固定宽度 + 控件占满剩余" —— 不再折行成"剧\n本"，也不会标签与控件分家
+   2) 抽屉：面板各自自然高度（内部列表滚动），底部操作按钮吸底常驻；开抽屉自动收右栏
+   3) 小地图可整体收起（手机默认收起，省 66px 竖向空间）
+   4) 顶栏补上"当前玩家"，不再是一条空白 */
+@media (max-width: 900px), (max-height: 520px) {
+  /* ---- 1. 菜单 ---- */
+  #menu-overlay .card {
+    width: min(96vw, 780px);
+    max-width: none !important;
+    padding: 10px 12px;
+    max-height: 94vh;
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+  }
+
+  #menu-overlay .card > h1,
+  #menu-overlay .card > .subtitle,
+  #menu-overlay .card > #btn-start,
+  #menu-overlay .card > .muted,
+  #menu-overlay .field {
+    flex: 0 0 100%;
+  }
+
+  #menu-overlay .field {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 3px 0;
+  }
+
+  #menu-overlay .field > label {
+    flex: 0 0 84px;
+    width: 84px;
+    white-space: nowrap;
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+
+  #menu-overlay .field > select,
+  #menu-overlay .field > input:not([type='range']):not([type='checkbox']) {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+  }
+
+  /* 说明文字 / 音量条这类附属内容换到下一行，避免和标签挤在一格里 */
+  #menu-overlay .field > div {
+    flex: 1 1 100%;
+    margin-top: 1px;
+  }
+
+  #menu-overlay .field > label input[type='checkbox'] {
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  #menu-overlay .field > .muted {
+    flex: 1 1 100%;
+    font-size: 10.5px;
+  }
+
+  /* 行更紧凑：一屏能多放两组 */
+  #menu-overlay .field select {
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+
+  /* 「开始游戏」吸底常驻，不用先滚到底 */
+  #menu-overlay #btn-start {
+    position: sticky;
+    bottom: 0;
+    z-index: 3;
+    margin-top: 8px;
+    box-shadow: 0 -8px 14px rgba(0, 0, 0, 0.5);
+  }
+
+  /* ---- 2. 抽屉 ---- */
+  #leftpanel .pb-forces,
+  #leftpanel .pb-log,
+  #leftpanel .pb-achv {
+    flex: 0 0 auto;
+    max-height: none;
+  }
+
+  /* 小屏：每块面板给"够看几行"的高度，其余靠点标题折叠 */
+  #leftpanel .pb-forces > div {
+    max-height: 132px;
+  }
+
+  #leftpanel .pb-log > div {
+    max-height: min(118px, 18vh);
+  }
+
+  #leftpanel .pb-achv > div {
+    max-height: 186px;
+  }
+
+  #leftpanel .pb-forces > div,
+  #leftpanel .pb-log > div,
+  #leftpanel .pb-achv > div {
+    overflow-y: auto;
+    min-height: 40px;
+  }
+
+  /* 行距放开一点，别挤成一团 */
+  #leftpanel .force-row {
+    margin: 6px 0;
+  }
+
+  #leftpanel .log-entry {
+    padding: 3px 0;
+    line-height: 1.45;
+  }
+
+  #leftpanel .achv {
+    padding: 5px 0;
+  }
+
+  /* 底部操作栏：固定在抽屉底部的一行四键（原来 2×2 占了 106px，把面板挤没了） */
+  #leftpanel .drawer-actions,
+  #leftpanel .drawer-actions.mob-only {
+    flex: 0 0 auto;
+    position: static;
+    margin: 0;
+    padding: 8px 0 2px;
+    background: transparent;
+    border-top: 2px solid var(--edge-dark);
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  #leftpanel .drawer-actions button {
+    width: 100%;
+    padding: 6px 2px;
+    font-size: 11.5px;
+    white-space: nowrap;
+  }
+
+  /* 头部压薄一点，把高度让给三块面板 */
+  #leftpanel .drawer-head {
+    padding: 2px 2px 6px;
+    margin-bottom: 2px;
+  }
+
+  #leftpanel .drawer-head b {
+    font-size: 13px;
+  }
+
+  /* 抽屉主体：只在这一层滚动 */
+  #leftpanel .drawer-body {
+    overflow-y: auto;
+    padding-bottom: 4px;
+  }
+
+  /* 抽屉打开 → 收起右侧详情面板（两头夹击会让地图只剩一条缝） */
+  body.drawer-open #sidepanel {
+    transform: translateX(108%) !important;
+    pointer-events: none !important;
+  }
+
+  /* ---- 3. 小地图可收起 ---- */
+  #mapctl.collapsed #minimap {
+    display: none;
+  }
+
+  #mapctl.collapsed {
+    padding: 3px;
+  }
+
+  #mapctl .maprow {
+    gap: 4px;
+  }
+
+  #mapctl .maprow button {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+  /* ---- 4. 顶栏 ---- */
+  #hud-now {
+    max-width: 34vw;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 12px;
+  }
+
+  #hud-chip {
+    max-width: 40vw;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* 提示条移到屏幕下方中间：左下角已经给了小地图 */
+  #toasts {
+    left: 50%;
+    right: auto;
+    bottom: 10px;
+    transform: translateX(-50%);
+    align-items: center;
+  }
+}
+
+/* 超小屏（<760 宽）：顶栏只保留最关键的信息 */
+@media (max-width: 760px) {
+  #hud-now {
+    display: none !important;
+  }
+
+  #hud-chip {
+    max-width: 52vw;
+  }
+}
+
+/* 战斗记录：按回合分组 + 只显示最近 3 回合（可一键展开全部） */
+#leftpanel .log-round {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 7px 0 3px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--gold);
+  opacity: 0.85;
+}
+
+#leftpanel .log-round::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.3;
+}
+
+#leftpanel .log-round:first-child {
+  margin-top: 2px;
+}
+
+#leftpanel .log-more {
+  font-size: 10.5px;
+  color: var(--muted);
+  text-align: center;
+  margin-bottom: 2px;
+}
+
+/* 折叠开关做成标题行里的小芯片（跟着标题走，不占额外高度） */
+#leftpanel .log-toggle {
+  margin-left: auto;
+  font-size: 11px;
+  padding: 3px 9px;
+  min-height: 26px;
+  letter-spacing: 0;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+
+
+#leftpanel #log-count,
+#leftpanel #achv-count {
+  font-size: 10px;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+
+/* ===== 手机端第三轮优化 ===== */
+@media (max-width: 900px), (max-height: 520px) {
+  /* 2. 弹窗收窄：滑杆 + 几个按钮 420~460px 就够，别把地图全盖住（菜单除外，它需要宽度） */
+  .overlay:not(#menu-overlay) .card {
+    width: min(94vw, 460px) !important;
+    max-width: min(94vw, 460px) !important;
+  }
+
+  /* 快捷百分比按钮在窄弹窗里改成两行四列，仍然好点 */
+  .overlay:not(#menu-overlay) .card .quick-row,
+  .overlay:not(#menu-overlay) .card > div[style*='gap'] {
+    flex-wrap: wrap;
+  }
+
+  /* 4. 右栏宽度：原来 min(30vw,320px) 在 740 宽小屏只有 222px，太挤 */
+  #sidepanel {
+    width: min(34vw, 300px);
+  }
+
+  #sidepanel .row {
+    gap: 6px;
+  }
+
+  #sidepanel .row > span:first-child {
+    min-width: 0;
+  }
+
+  #sidepanel .row > span:last-child {
+    white-space: nowrap;
+  }
+}
+
+/* 相邻区域列表可折叠（手机上列表可能很长，把上面的操作区顶下去） */
+#sidepanel .side-fold {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#sidepanel .side-fold::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.25;
+}
+
+#sidepanel .nb-wrap.folded > #nb-list {
+  display: none;
+}
+
+/* ===== 开始游戏弹窗：两列布局 =====
+   单列时需要滚动才能看到全部选项；两列后一屏能放下。
+   宽屏两列、窄屏（插件面板/手机）自动回落单列。 */
+#menu-overlay .menu-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 26px;
+  row-gap: 0;
+  align-items: start;
+  max-width: 880px;
+  text-align: left;
+}
+
+#menu-overlay .menu-card > h1,
+#menu-overlay .menu-card > .subtitle,
+#menu-overlay .menu-card > #btn-start,
+#menu-overlay .menu-card > .field--wide,
+#menu-overlay .menu-card > .menu-hint,
+#menu-overlay .menu-card > h3,
+#menu-overlay .menu-card > #leaderboard-box {
+  grid-column: 1 / -1;
+}
+
+#menu-overlay .menu-card > h1,
+#menu-overlay .menu-card > .subtitle {
+  text-align: center;
+}
+
+/* 两列时每个字段纵向排列更整齐（名称在上、控件在下） */
+#menu-overlay .menu-card .field {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 4px;
+  margin: 5px 0;
+}
+
+#menu-overlay .menu-card .field label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#menu-overlay .menu-card .field--wide {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+#menu-overlay .menu-card .field--wide > label {
+  width: 100%;
+}
+
+#menu-overlay .menu-card > #btn-start {
+  margin-top: 12px;
+}
+
+#menu-overlay .menu-card > .menu-hint {
+  font-size: 11px;
+}
+
+@media (max-width: 760px) {
+  #menu-overlay .menu-card {
+    grid-template-columns: 1fr;
+    max-width: 540px;
+  }
+}

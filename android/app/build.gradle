@@ -1,0 +1,70 @@
+plugins {
+    id 'com.android.application'
+}
+
+// 本地自签名 keystore（由 scripts/build-android.mjs 生成），存在则用于 release 签名
+def keystoreFile = rootProject.file('keystore/gongfa.jks')
+
+android {
+    namespace 'com.gongfawar.game'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.gongfawar.game'
+        minSdk 23
+        targetSdk 35
+        versionCode 8
+        versionName '1.0.7'
+        resourceConfigurations += ['zh', 'en']
+    }
+
+    if (keystoreFile.exists()) {
+        signingConfigs {
+            release {
+                storeFile keystoreFile
+                storePassword 'gongfa2026'
+                keyAlias 'gongfa'
+                keyPassword 'gongfa2026'
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            applicationIdSuffix '.debug'
+            versionNameSuffix '-debug'
+        }
+        release {
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig keystoreFile.exists() ? signingConfigs.release : signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // 打包后的 Web 产物（scripts/build-android.mjs 负责拷贝到 assets/www）
+    sourceSets {
+        main {
+            assets.srcDirs = ['src/main/assets']
+        }
+    }
+
+    packagingOptions {
+        resources.excludes += ['META-INF/*.version', 'META-INF/*.kotlin_module']
+    }
+
+    lint {
+        abortOnError false
+    }
+}
+
+dependencies {
+    // WebViewAssetLoader：把 assets 里的 Web 产物以 https://appassets.androidplatform.net/ 提供，
+    // 规避 file:// 下 ES module / CORS 被拦截导致的白屏（官方推荐做法）
+    implementation 'androidx.webkit:webkit:1.12.1'
+}
