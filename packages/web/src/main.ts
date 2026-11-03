@@ -37,6 +37,7 @@ import { showAttackDialog, showConfirm, showEvents, showHelp, showMoveDialog, sh
 import { MusicPlayer, loadMusicPrefs, saveMusicPrefs, type Mood } from './audio/music';
 import { SfxPlayer, loadSfxPrefs, saveSfxPrefs } from './audio/sfx';
 import { api } from './net/apiClient';
+import { escapeHtml } from './escape';
 
 const app = document.getElementById('app')!;
 app.innerHTML = '';
@@ -345,7 +346,7 @@ function renderLockRoom(code: string, peers: LockPeer[], started: boolean): void
   const list = peers
     .map(
       (p) =>
-        `<div>${p.seat === 0 ? '👑 ' : ''}🧑 ${p.name}${p.seat === mySeat ? '（我）' : ''}${p.connected ? '' : ' · 掉线'}</div>`,
+        `<div>${p.seat === 0 ? '👑 ' : ''}🧑 ${escapeHtml(p.name)}${p.seat === mySeat ? '（我）' : ''}${p.connected ? '' : ' · 掉线'}</div>`,
     )
     .join('');
   const rest = Math.max(0, (lastConfig?.opponents ?? 1) + 1 - peers.length);

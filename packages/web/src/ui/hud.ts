@@ -23,6 +23,7 @@ import {
   type Weather,
 } from '@gongfa-war/core';
 import { ownerColor } from '../render/mapRenderer';
+import { escapeHtml } from '../escape';
 
 export interface HudHandlers {
   onEndTurn(): void;
@@ -367,7 +368,7 @@ export class Hud {
         return `<div class="force-row ${p.alive ? '' : 'dead'}">
           <span class="dot" style="background:${ownerColor(state, p.id)}"></span>
           <div class="force-main">
-            <div class="force-name">${cur}${nationEmoji(p.nationId)} ${p.name}${p.isHuman ? '（我）' : ''}</div>
+            <div class="force-name">${cur}${nationEmoji(p.nationId)} ${escapeHtml(p.name)}${p.isHuman ? '（我）' : ''}</div>
             <div class="force-stats">
               <span>${approx}${a.count} 区</span>
               <span>${approx}${a.army} 兵</span>

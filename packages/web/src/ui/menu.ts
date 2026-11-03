@@ -1,5 +1,6 @@
 import { MAP_TEMPLATES, NATIONS, SCENARIOS, type Difficulty, type MapTemplate } from '@gongfa-war/core';
 import { api } from '../net/apiClient';
+import { escapeHtml } from '../escape';
 
 export interface StartConfig {
   regionCount: number;
@@ -191,7 +192,7 @@ export function showMenu(
       box.innerHTML =
         '<table id="leaderboard"><tr><th>#</th><th>玩家</th><th>积分</th></tr>' +
         entries
-          .map((e: any, i: number) => `<tr><td>${i + 1}</td><td>${e.displayName ?? '匿名'}</td><td>${e.score}</td></tr>`)
+          .map((e: any, i: number) => `<tr><td>${i + 1}</td><td>${escapeHtml(e.displayName ?? '匿名')}</td><td>${e.score}</td></tr>`)
           .join('') +
         '</table>';
     } catch {
